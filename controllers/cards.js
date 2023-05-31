@@ -43,16 +43,18 @@ module.exports.deleteCardById = (req, res, next) => {
       }
     });
 };
+
 module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } },
   { new: true },
+  { runValidators: true },
 )
   .then((card) => {
-    if (!card) {
-      res.status(VALIDATION_ERROR).send({ message: 'Передан несуществующий _id карточки.' });
-    } else {
+    if (card) {
       res.send({ data: card });
+    } else {
+      res.status(VALIDATION_ERROR).send({ message: 'Передан несуществующий _id карточки.' });
     }
   })
   .catch((err) => {
