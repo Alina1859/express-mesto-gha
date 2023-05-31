@@ -33,12 +33,17 @@ module.exports.createUser = (req, res, next) => {
 
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.user._id)
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (req.user._id !== req.params) {
+        next(res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
+      }
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
-        next(res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
-      } else {
         next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
+      } else {
+        next(err);
       }
     });
 };
