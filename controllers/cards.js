@@ -43,20 +43,23 @@ module.exports.deleteCardById = (req, res, next) => {
       }
     });
 };
-
-module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
+module.exports.likeCard = (req, res) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } },
   { new: true },
 )
-  .then((card) => res.send({ data: card }))
+  .then((card) => {
+    if (!card) {
+      res.status(VALIDATION_ERROR).send({ message: 'Передан несуществующий _id карточки.' });
+    } else {
+      res.send({ data: card });
+    }
+  })
   .catch((err) => {
     if (err.name === 'NotFoundError') {
-      next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан несуществующий _id карточки.' }));
-    } else if (err.name === 'ValidationError') {
-      next(res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для постановки лайка.' }));
+      res.status(NOT_FOUND_ERROR).send({ message: 'Переданы некорректные данные для постановки лайка.' });
     } else {
-      next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
+      res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
     }
   });
 
