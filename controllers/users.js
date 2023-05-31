@@ -34,7 +34,7 @@ module.exports.createUser = (req, res, next) => {
 module.exports.getUserById = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
-      if (req.user._id !== req.params) {
+      if (req.user._id !== req.params.userId) {
         next(res.status(VALIDATION_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
       } else {
         res.send({ data: user });
