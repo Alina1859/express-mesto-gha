@@ -42,9 +42,9 @@ module.exports.getUserById = (req, res, next) => {
     })
     .catch((err) => {
       if (err.name === 'CastError') {
-        next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
+        next(res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' }));
       } else {
-        next(err);
+        next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
       }
     });
 };

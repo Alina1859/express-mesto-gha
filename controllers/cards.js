@@ -70,11 +70,15 @@ module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   { $pull: { likes: req.user._id } },
   { new: true },
 )
-  .then((card) => res.send({ data: card }))
-  .catch((err) => {
-    if (err.name === 'NotFoundError') {
+  .then((card) => {
+    if (!card) {
       next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан несуществующий _id карточки.' }));
-    } else if (err.name === 'ValidationError') {
+    } else {
+      next(res.send({ data: card }));
+    }
+  })
+  .catch((err) => {
+    if (err.name === 'CastError') {
       next(res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для снятия лайка.' }));
     } else {
       next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
