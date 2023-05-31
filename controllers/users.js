@@ -37,12 +37,12 @@ module.exports.getUserById = (req, res, next) => {
       if (req.user._id !== req.params.userId) {
         next(res.status(VALIDATION_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
       } else {
-        res.send({ data: user });
+        next(res.send({ data: user }));
       }
     })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
-        next(res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
+        next(res.status(NOT_FOUND_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
       } else {
         next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
       }
@@ -53,7 +53,16 @@ module.exports.updateProfile = (req, res, next) => {
   const { name, about } = req.body;
 
   User.findByIdAndUpdate(req.user._id, { name, about }, { new: true })
-    .then((user) => res.send({ data: user }))
+    .then((user) => {
+      if (user.name.length < 2
+        || user.name.length > 30
+        || user.about.length < 2
+        || user.about.length > 30) {
+        next(res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении профиля.' }));
+      } else {
+        next(res.send({ data: user }));
+      }
+    })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
         next(res.status(NOT_FOUND_ERROR).send({ message: 'Переданы некорректные данные при обновлении профиля.' }));
