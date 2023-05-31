@@ -13,10 +13,10 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 
 app.use((req, res, next) => {
   req.user = {
-    _id: '64771f4848119ecbec528b57',
+    _id: '64774017b4fbad9f4800b49f',
   };
-
-  next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
+  next();
+  // next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
 });
 
 app.use('/', require('./routes/users'));
