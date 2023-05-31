@@ -19,12 +19,12 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use((req, res, next) => {
-  next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
-});
-
 app.use('/', require('./routes/users'));
 app.use('/', require('./routes/cards'));
+
+app.use('*', (req, res, next) => {
+  next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
+});
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
