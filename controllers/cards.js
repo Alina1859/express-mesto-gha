@@ -33,11 +33,17 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCardById = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.id)
-    .then((card) => res.send({ data: card }))
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
+  Card.findByIdAndRemove(req.params.cardId)
+    .then((card) => {
+      if (!card) {
         next(res.status(NOT_FOUND_ERROR).send({ message: 'Карточка с указанным _id не найдена.' }));
+      } else {
+        next(res.send({ data: card }));
+      }
+    })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные для удаления карточки' }));
       } else {
         next(res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
       }
