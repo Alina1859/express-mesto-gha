@@ -35,9 +35,10 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (req.user._id !== req.params) {
-        next(res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
+        next(res.status(VALIDATION_ERROR).send({ message: 'Пользователь по указанному _id не найден.' }));
+      } else {
+        res.send({ data: user });
       }
-      res.send({ data: user });
     })
     .catch((err) => {
       if (err.name === 'NotFoundError') {
