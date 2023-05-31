@@ -15,8 +15,12 @@ app.use((req, res, next) => {
   req.user = {
     _id: '64774017b4fbad9f4800b49f',
   };
+
   next();
-  // next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
+});
+
+app.use((req, res, next) => {
+  next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
 });
 
 app.use('/', require('./routes/users'));
