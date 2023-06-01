@@ -1,6 +1,6 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const { NOT_FOUND_ERROR } = require('./errors/errorsCodes');
+const mainRouter = require('./routes');
 
 const { PORT = 3000 } = process.env;
 
@@ -19,12 +19,7 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use('/', require('./routes/users'));
-app.use('/', require('./routes/cards'));
-
-app.use('*', (req, res, next) => {
-  next(res.status(NOT_FOUND_ERROR).send({ message: 'Передан некорректный путь' }));
-});
+app.use(mainRouter);
 
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
