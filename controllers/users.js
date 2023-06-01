@@ -44,10 +44,23 @@ module.exports.getUserById = (req, res, next) => {
     });
 };
 
-module.exports.updateProfile = (req, res, next) => {
-  const { name, about } = req.body;
+function cachingDecorator(func) {
+  const cache = new Map();
 
-  User.findByIdAndUpdate(req.user._id, { name, about }, { new: true, runValidators: true })
+  return function (x) {
+    if (cache.has(x)) {
+      return cache.get(x);
+    }
+
+    const result = func(x);
+
+    cache.set(x, result);
+    return result;
+  };
+}
+
+function updateUserData(req, res, next, args) {
+  User.findByIdAndUpdate(req.user._id, args, { new: true, runValidators: true })
     .then((user) => next(res.send({ data: user })))
     .catch((err) => {
       if (err instanceof mongoose.Error.DocumentNotFoundError) {
@@ -58,20 +71,14 @@ module.exports.updateProfile = (req, res, next) => {
         res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
       }
     });
+}
+
+module.exports.updateProfile = (req, res, next) => {
+  const { name, about } = req.body;
+  cachingDecorator(updateUserData(req, res, next, { name, about }));
 };
 
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
-
-  User.findByIdAndUpdate(req.user._id, { avatar }, { new: true, runValidators: true })
-    .then((user) => next(res.send({ data: user })))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Переданы некорректные данные при обновлении аватара.' });
-      } else if (err instanceof mongoose.Error.CastError.ValidationError) {
-        res.status(VALIDATION_ERROR).send({ message: 'Пользователь с указанным _id не найден.' });
-      } else {
-        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
-      }
-    });
+  cachingDecorator(updateUserData(req, res, next, { avatar }));
 };
