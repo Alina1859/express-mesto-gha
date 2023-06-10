@@ -15,6 +15,26 @@ module.exports.getUsers = (req, res) => {
     .catch(() => res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
 };
 
+module.exports.getCurrentUser = (req, res, next) => {
+  const { userId } = req.user._id;
+
+  User.findById(userId)
+    .then((user) => {
+      if (!user) {
+        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
+      } else {
+        next(res.send({ user }));
+      }
+    })
+    .catch((err) => {
+      if (err instanceof mongoose.Error.CastError) {
+        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
+      } else {
+        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
+      }
+    });
+};
+
 module.exports.createUser = (req, res) => {
   const {
     name, about, avatar, email, password,
@@ -97,11 +117,12 @@ module.exports.login = (req, res) => {
   const { email, password } = req.body;
 
   return User.findUserByCredentials(email, password)
-    .then(() => {
+    .then((user) => {
+      const userId = user._id;
     // аутентификация успешна! пользователь в переменной user
       // создадим токен
       const token = jwt.sign({
-        _id: 'd285e3dceed844f902650f40',
+        _id: userId,
       }, 'some-secret-key');
 
       // вернём токен
