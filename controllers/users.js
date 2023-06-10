@@ -1,5 +1,8 @@
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+
 const {
   VALIDATION_ERROR,
   NOT_FOUND_ERROR,
@@ -17,10 +20,13 @@ module.exports.createUser = (req, res) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  User.create({
-    name, about, avatar, email, password,
-  })
-    .then((user) => res.send({ data: user }))
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    .then((user) => {
+      res.send({ data: user });
+    })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
         res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
@@ -85,4 +91,36 @@ module.exports.updateProfile = (req, res, next) => {
 module.exports.updateAvatar = (req, res, next) => {
   const { avatar } = req.body;
   cachingDecorator(updateUserData(req, res, next, { avatar }));
+};
+
+module.exports.login = (req, res) => {
+  const { email, password } = req.body;
+
+  return User.findUserByCredentials(email, password)
+    .then(() => {
+    // аутентификация успешна! пользователь в переменной user
+      // создадим токен
+      const token = jwt.sign({
+        _id: 'd285e3dceed844f902650f40',
+      }, 'some-secret-key');
+
+      // вернём токен
+
+      // отправим токен, браузер сохранит его в куках
+
+      res
+        .cookie('jwt', token, {
+        // token - наш JWT токен, который мы отправляем
+          maxAge: 3600000,
+          httpOnly: true,
+          sameSite: true,
+        })
+        .end(); // если у ответа нет тела, можно использовать метод end
+    })
+    .catch((err) => {
+    // ошибка аутентификации
+      res
+        .status(401)
+        .send({ message: err.message });
+    });
 };
