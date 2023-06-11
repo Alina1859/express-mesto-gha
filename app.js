@@ -1,6 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
+const { errors } = require('celebrate');
 const mainRouter = require('./routes');
 const { REFERENCE_ERROR } = require('./errors/reference-err');
 
@@ -16,6 +17,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/mestodb');
 app.use(cookieParser());
 
 app.use(mainRouter);
+
+app.use(errors()); // обработчик ошибок celebrate
 
 app.use((err, req, res, next) => {
   if (err.Statuscode === REFERENCE_ERROR) {

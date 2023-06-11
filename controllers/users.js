@@ -15,31 +15,35 @@ const {
   REFERENCE_ERROR,
 } = require('../errors/errorsCodes');
 
-module.exports.getUsers = (req, res) => {
+module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send({ data: users }))
-    .catch(() => res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
+    // .catch(() => res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
+    .catch((err) => next(err));
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
   User.findById(req.user._id)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден');
+        // res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
       } else {
         next(res.send(user));
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
+        throw new ValidationError('Переданы некорректные данные _id');
+        // res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
       } else {
-        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
+        next(err);
+        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
       }
     });
 };
 
-module.exports.createUser = (req, res) => {
+module.exports.createUser = (req, res, next) => {
   const {
     name, about, avatar, email, password,
   } = req.body;
@@ -53,9 +57,12 @@ module.exports.createUser = (req, res) => {
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при создании пользователя' });
+        // res.status(VALIDATION_ERROR).send
+        // ({ message: 'Переданы некорректные данные при создании пользователя' });
+        throw new ValidationError('Переданы некорректные данные при создании пользователя');
       } else {
-        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
+        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
+        next(err);
       }
     });
 };
@@ -74,7 +81,7 @@ module.exports.getUserById = (req, res, next) => {
         next(new ValidationError('Переданы некорректные данные _id'));
         // res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
       } else {
-        next(err)
+        next(err);
         // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
       }
     });
