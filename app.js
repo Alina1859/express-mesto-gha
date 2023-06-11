@@ -23,7 +23,7 @@ app.use(mainRouter);
 
 app.use(errors()); // обработчик ошибок celebrate
 
-app.use((err, req, res) => {
+app.use((err, req, res, next) => {
   const { statusCode = `${REFERENCE_ERROR}`, message } = err;
 
   if (err instanceof mongoose.Error.CastError) {
@@ -45,6 +45,8 @@ app.use((err, req, res) => {
         : message,
     });
   }
+
+  next()
 });
 
 app.listen(PORT, () => {
