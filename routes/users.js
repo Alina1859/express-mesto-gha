@@ -16,7 +16,11 @@ router.get('/', getUsers);
 
 router.get('/me', getCurrentUser);
 
-router.get('/:userId', getUserById);
+router.get('/:userId', celebrate({
+  params: Joi.object().keys({
+    userId: Joi.string().alphanum().length(24),
+  }),
+}), getUserById);
 
 router.patch('/me', celebrate({
   body: Joi.object().keys({
@@ -27,7 +31,8 @@ router.patch('/me', celebrate({
 
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
-    avatar: Joi.string(),
+    // eslint-disable-next-line no-useless-escape
+    avatar: Joi.string().regex(/^(http|https):\/\/[-a-zA-Z0-9._~\-:?#[\]@!$&'()*+,\/;=]{2,256}/),
   }),
 }), updateAvatar);
 

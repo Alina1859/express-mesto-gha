@@ -3,10 +3,11 @@ const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const mainRouter = require('./routes');
-const { REFERENCE_ERROR } = require('./errors/reference-err');
+const { REFERENCE_ERROR, UNAUTHORIZED_ERROR, CONFLICT_ERROR } = require('./errors/reference-err');
 const NotFoundError = require('./errors/not-found-err');
 const ValidationError = require('./errors/validation-err');
 const UnauthorizedError = require('./errors/unauthorized-err');
+const ConflictError = require('./errors/conflict-err');
 
 const { PORT = 3000 } = process.env;
 
@@ -35,9 +36,12 @@ app.use((err, req, res, next) => {
   } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
     res.send({ message: 'Пользователь с указанным _id не найден' });
     throw new NotFoundError('Пользователь с указанным _id не найден');
-  } else if (err === 401) {
+  } else if (err === `${UNAUTHORIZED_ERROR}`) {
     res.send({ message: 'Необходима авторизация' });
     throw new UnauthorizedError('Необходима авторизация');
+  } else if (err === `${CONFLICT_ERROR}`) {
+    res.send({ message: 'Необходима авторизация' });
+    throw new ConflictError('Необходима авторизация');
   } else {
     res.status(statusCode).send({
       message: statusCode === `${REFERENCE_ERROR}`

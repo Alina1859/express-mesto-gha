@@ -28,6 +28,8 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
 
+  console.log(email)
+
   bcrypt.hash(password, 10)
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
@@ -85,7 +87,7 @@ module.exports.updateAvatar = (req, res, next) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-
+console.log(req)
   return User.findUserByCredentials(email, password)
     .then((user) => {
     // аутентификация успешна! пользователь в переменной user
