@@ -18,6 +18,8 @@ const userSchema = new mongoose.Schema({
   avatar: {
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
+    // eslint-disable-next-line
+    match: /^(http|https):\/\/[-a-zA-Z0-9._~\-:?#[\]@!$&'()*+,\/;=]{2,256}/gm
   },
   email: {
     type: String,
@@ -35,6 +37,7 @@ const userSchema = new mongoose.Schema({
   },
 });
 
+// eslint-disable-next-line func-names
 userSchema.statics.findUserByCredentials = function (email, password) {
   return this.findOne({ email }).select('+password')
     .then((user) => {

@@ -6,6 +6,7 @@ const mainRouter = require('./routes');
 const { REFERENCE_ERROR } = require('./errors/reference-err');
 const NotFoundError = require('./errors/not-found-err');
 const ValidationError = require('./errors/validation-err');
+const UnauthorizedError = require('./errors/unauthorized-err');
 
 const { PORT = 3000 } = process.env;
 
@@ -34,6 +35,9 @@ app.use((err, req, res) => {
   } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
     res.send({ message: 'Пользователь с указанным _id не найден' });
     throw new NotFoundError('Пользователь с указанным _id не найден');
+  } else if (err === 401) {
+    res.send({ message: 'Необходима авторизация' });
+    throw new UnauthorizedError('Необходима авторизация');
   } else {
     res.status(statusCode).send({
       message: statusCode === `${REFERENCE_ERROR}`
@@ -44,5 +48,6 @@ app.use((err, req, res) => {
 });
 
 app.listen(PORT, () => {
+  // eslint-disable-next-line no-console
   console.log(`App listening on port ${PORT}`);
 });
