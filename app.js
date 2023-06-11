@@ -46,7 +46,7 @@ app.use((err, req, res, next) => {
     });
   }
 
-  next()
+  next();
 });
 
 app.listen(PORT, () => {

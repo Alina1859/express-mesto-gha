@@ -15,14 +15,20 @@ const { NOT_FOUND_ERROR } = require('../errors/errorsCodes');
 router.post('/signup', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30),
-    avatar: Joi.string(),
+    // eslint-disable-next-line no-useless-escape
+    avatar: Joi.string().regex(/^(http|https):\/\/[-a-zA-Z0-9._~\-:?#[\]@!$&'()*+,\/;=]{2,256}/),
     about: Joi.string().min(2).max(30),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),
 }), createUser);
 
-router.post('/signin', login);
+router.post('/signin', celebrate({
+  body: Joi.object().keys({
+    email: Joi.string().required().email(),
+    password: Joi.string().required(),
+  }),
+}), login);
 
 router.use(auth);
 
