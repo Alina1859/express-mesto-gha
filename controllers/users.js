@@ -1,24 +1,13 @@
-const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
-const ValidationError = require('../errors/validation-err');
-const UnauthorizedError = require('../errors/unauthorized-err');
-const ForbiddenError = require('../errors/forbidden-err');
 const NotFoundError = require('../errors/not-found-err');
-const ConflictError = require('../errors/conflict-err');
-const ReferenceError = require('../errors/reference-err');
 
-const {
-  VALIDATION_ERROR,
-  NOT_FOUND_ERROR,
-  REFERENCE_ERROR,
-} = require('../errors/errorsCodes');
+const { UNAUTHORIZED_ERROR } = require('../errors/errorsCodes');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    // .catch(() => res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
     .catch((err) => next(err));
 };
 
@@ -27,20 +16,11 @@ module.exports.getCurrentUser = (req, res, next) => {
     .then((user) => {
       if (!user) {
         throw new NotFoundError('Пользователь по указанному _id не найден');
-        // res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
       } else {
         next(res.send(user));
       }
     })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        throw new ValidationError('Переданы некорректные данные _id');
-        // res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
-      } else {
-        next(err);
-        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
-      }
-    });
+    .catch((err) => next(err));
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -55,16 +35,7 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => {
       res.send({ data: user });
     })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.ValidationError) {
-        // res.status(VALIDATION_ERROR).send
-        // ({ message: 'Переданы некорректные данные при создании пользователя' });
-        throw new ValidationError('Переданы некорректные данные при создании пользователя');
-      } else {
-        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
-        next(err);
-      }
-    });
+    .catch((err) => next(err));
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -76,15 +47,7 @@ module.exports.getUserById = (req, res, next) => {
         next(res.send(user));
       }
     })
-    .catch((err) => {
-      if (err instanceof mongoose.Error.CastError) {
-        next(new ValidationError('Переданы некорректные данные _id'));
-        // res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
-      } else {
-        next(err);
-        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
-      }
-    });
+    .catch((err) => next(err));
 };
 
 function cachingDecorator(func) {
@@ -105,15 +68,7 @@ function cachingDecorator(func) {
 function updateUserData(req, res, next, args) {
   User.findByIdAndUpdate(req.user._id, args, { new: true, runValidators: true })
     .then((user) => next(res.send({ data: user })))
-    .catch((err) => {
-      if (err instanceof mongoose.Error.DocumentNotFoundError) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь с указанным _id не найден.' });
-      } else if (err instanceof mongoose.Error.ValidationError) {
-        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные при обновлении профиля.' });
-      } else {
-        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
-      }
-    });
+    .catch((err) => next(err));
 }
 
 module.exports.updateProfile = (req, res, next) => {
@@ -145,12 +100,11 @@ module.exports.login = (req, res) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send(user);// если у ответа нет тела, можно использовать метод end
+      res.send(user);
     })
     .catch((err) => {
-    // ошибка аутентификации
       res
-        .status(401)
+        .status(UNAUTHORIZED_ERROR)
         .send({ message: err.message });
     });
 };

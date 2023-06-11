@@ -14,13 +14,9 @@ module.exports = (req, res, next) => {
     // const err = new Error('Необходима авторизация');
     // err.statusCode = 401;
     next(new UnauthorizedError('Необходима авторизация'));
-
   }
 
   req.user = payload; // записываем пейлоуд в объект запроса
 
   next(); // пропускаем запрос дальше
-
-  // Добавлено явное возвращаемое значение для линта
-  // return null;
 };

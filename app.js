@@ -4,6 +4,8 @@ const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const mainRouter = require('./routes');
 const { REFERENCE_ERROR } = require('./errors/reference-err');
+const NotFoundError = require('./errors/not-found-err');
+const ValidationError = require('./errors/validation-err');
 
 const { PORT = 3000 } = process.env;
 
@@ -20,17 +22,25 @@ app.use(mainRouter);
 
 app.use(errors()); // обработчик ошибок celebrate
 
-app.use((err, req, res, next) => {
+app.use((err, req, res) => {
   const { statusCode = `${REFERENCE_ERROR}`, message } = err;
 
-  res
-    .status(statusCode)
-    .send({
-      // проверяем статус и выставляем сообщение в зависимости от него
+  if (err instanceof mongoose.Error.CastError) {
+    res.send({ message: 'Переданы некорректные данные _id' });
+    throw new ValidationError('Переданы некорректные данные _id');
+  } else if (err instanceof mongoose.Error.ValidationError) {
+    res.send({ message: 'Переданы некорректные данные' });
+    throw new ValidationError('Переданы некорректные данные');
+  } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+    res.send({ message: 'Пользователь с указанным _id не найден' });
+    throw new NotFoundError('Пользователь с указанным _id не найден');
+  } else {
+    res.status(statusCode).send({
       message: statusCode === `${REFERENCE_ERROR}`
         ? 'На сервере произошла ошибка'
         : message,
     });
+  }
 });
 
 app.listen(PORT, () => {

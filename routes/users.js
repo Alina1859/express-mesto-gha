@@ -3,7 +3,6 @@ const cookieParser = require('cookie-parser');
 const { celebrate, Joi } = require('celebrate');
 
 const {
-  createUser,
   getUsers,
   getUserById,
   updateProfile,
@@ -16,14 +15,6 @@ router.use(cookieParser());
 router.get('/', getUsers);
 
 router.get('/me', getCurrentUser);
-
-// router.post('/', celebrate({
-//   body: Joi.object().keys({
-//     name: Joi.string().min(2).max(30),
-//     avatar: Joi.string(),
-//     about: Joi.string().min(2).max(30),
-//   }),
-// }), createUser);
 
 router.get('/:userId', getUserById);
 
