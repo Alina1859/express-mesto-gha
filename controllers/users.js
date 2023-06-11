@@ -2,6 +2,12 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
+const ValidationError = require('../errors/validation-err');
+const UnauthorizedError = require('../errors/unauthorized-err');
+const ForbiddenError = require('../errors/forbidden-err');
+const NotFoundError = require('../errors/not-found-err');
+const ConflictError = require('../errors/conflict-err');
+const ReferenceError = require('../errors/reference-err');
 
 const {
   VALIDATION_ERROR,
@@ -16,14 +22,12 @@ module.exports.getUsers = (req, res) => {
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
-  const { userId } = req.user._id;
-
-  User.findById(userId)
+  User.findById(req.user._id)
     .then((user) => {
       if (!user) {
         res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
       } else {
-        next(res.send({ user }));
+        next(res.send(user));
       }
     })
     .catch((err) => {
@@ -60,16 +64,18 @@ module.exports.getUserById = (req, res, next) => {
   User.findById(req.params.userId)
     .then((user) => {
       if (!user) {
-        res.status(NOT_FOUND_ERROR).send({ message: 'Пользователь по указанному _id не найден.' });
+        throw new NotFoundError('Пользователь по указанному _id не найден');
       } else {
-        next(res.send({ data: user }));
+        next(res.send(user));
       }
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.CastError) {
-        res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
+        next(new ValidationError('Переданы некорректные данные _id'));
+        // res.status(VALIDATION_ERROR).send({ message: 'Переданы некорректные данные _id' });
       } else {
-        res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
+        next(err)
+        // res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' });
       }
     });
 };
@@ -118,25 +124,21 @@ module.exports.login = (req, res) => {
 
   return User.findUserByCredentials(email, password)
     .then((user) => {
-      const userId = user._id;
     // аутентификация успешна! пользователь в переменной user
       // создадим токен
-      const token = jwt.sign({
-        _id: userId,
-      }, 'some-secret-key');
+      const token = jwt.sign({ _id: user._id }, 'some-secret-key');
 
       // вернём токен
 
       // отправим токен, браузер сохранит его в куках
 
-      res
-        .cookie('jwt', token, {
+      res.cookie('jwt', token, {
         // token - наш JWT токен, который мы отправляем
-          maxAge: 3600000,
-          httpOnly: true,
-          sameSite: true,
-        })
-        .end(); // если у ответа нет тела, можно использовать метод end
+        maxAge: 3600000,
+        httpOnly: true,
+        sameSite: true,
+      });
+      res.send(user);// если у ответа нет тела, можно использовать метод end
     })
     .catch((err) => {
     // ошибка аутентификации

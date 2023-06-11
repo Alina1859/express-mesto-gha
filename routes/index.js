@@ -11,10 +11,10 @@ const auth = require('../middlewares/auth');
 
 const { NOT_FOUND_ERROR } = require('../errors/errorsCodes');
 
-// router.use('/', auth);
-
 router.post('/signin', login);
 router.post('/signup', createUser);
+
+router.use(auth);
 
 router.use('/users', usersRouter);
 router.use('/cards', cardsRouter);

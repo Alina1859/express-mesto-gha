@@ -1,4 +1,5 @@
 const router = require('express').Router();
+const cookieParser = require('cookie-parser');
 
 const {
   createUser,
@@ -8,6 +9,8 @@ const {
   updateAvatar,
   getCurrentUser,
 } = require('../controllers/users');
+
+router.use(cookieParser());
 
 router.get('/', getUsers);
 router.get('/me', getCurrentUser);
