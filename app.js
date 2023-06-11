@@ -21,12 +21,16 @@ app.use(mainRouter);
 app.use(errors()); // обработчик ошибок celebrate
 
 app.use((err, req, res, next) => {
-  if (err.Statuscode === REFERENCE_ERROR) {
-    res.send({ message: 'Произошла ошибка по умолчанию' });
-  } else {
-    res.send({ message: err.message });
-  }
-  next();
+  const { statusCode = `${REFERENCE_ERROR}`, message } = err;
+
+  res
+    .status(statusCode)
+    .send({
+      // проверяем статус и выставляем сообщение в зависимости от него
+      message: statusCode === `${REFERENCE_ERROR}`
+        ? 'На сервере произошла ошибка'
+        : message,
+    });
 });
 
 app.listen(PORT, () => {

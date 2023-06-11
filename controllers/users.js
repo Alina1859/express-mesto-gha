@@ -17,7 +17,7 @@ const {
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
-    .then((users) => res.send({ data: users }))
+    .then((users) => res.send(users))
     // .catch(() => res.status(REFERENCE_ERROR).send({ message: 'Произошла ошибка по умолчанию' }));
     .catch((err) => next(err));
 };
