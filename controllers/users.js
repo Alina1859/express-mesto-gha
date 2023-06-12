@@ -31,7 +31,6 @@ module.exports.createUser = (req, res, next) => {
     .then((hash) => User.create({
       name, about, avatar, email, password: hash,
     }))
-    // .then((user) => res.status(201).send({ data: user}))
     .then((user) => {
       const { ...userData } = user.toObject();
       delete userData.password;
@@ -107,7 +106,7 @@ module.exports.login = (req, res, next) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send(token);
+      res.send({ token });
     })
     .catch(next);
 };
