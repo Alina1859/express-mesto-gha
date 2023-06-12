@@ -18,16 +18,21 @@ module.exports.createCard = (req, res, next) => {
 };
 
 module.exports.deleteCardById = (req, res, next) => {
-  Card.findByIdAndRemove(req.params.cardId)
+  Card.findById(req.params.cardId)
     .then((card) => {
-      const cardOwner = card.owner.toString();
-      if (req.user._id !== cardOwner) {
-        throw new ForbiddenError('Карточка с указанным _id не найдена');
-      } else if (!card) {
+      if (!card) {
         throw new NotFoundError('Карточка с указанным _id не найдена');
       } else {
-        next(res.send({ data: card }));
+        const cardOwner = card.owner.toString();
+        if (req.user._id !== cardOwner) {
+          throw new ForbiddenError('У вас нет прав на удаление данной карточки');
+        } else {
+          return Card.findByIdAndRemove(req.params.cardId);
+        }
       }
+    })
+    .then((card) => {
+      res.send({ data: card });
     })
     .catch((err) => next(err));
 };
