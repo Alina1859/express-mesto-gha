@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
+const ConflictError = require('../errors/conflict-err');
 
 const { UNAUTHORIZED_ERROR } = require('../errors/errorsCodes');
 
@@ -28,12 +29,17 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  console.log(email)
+  User.findOne({ email })
+    .then((existingUser) => {
+      if (existingUser) {
+        throw new ConflictError('Такой пользователь уже существует');
+      }
 
-  bcrypt.hash(password, 10)
-    .then((hash) => User.create({
-      name, about, avatar, email, password: hash,
-    }))
+      return bcrypt.hash(password, 10)
+        .then((hash) => User.create({
+          name, about, avatar, email, password: hash,
+        }));
+    })
     .then((user) => {
       const { ...userData } = user.toObject();
       delete userData.password;
@@ -87,7 +93,6 @@ module.exports.updateAvatar = (req, res, next) => {
 
 module.exports.login = (req, res) => {
   const { email, password } = req.body;
-console.log(req)
   return User.findUserByCredentials(email, password)
     .then((user) => {
     // аутентификация успешна! пользователь в переменной user

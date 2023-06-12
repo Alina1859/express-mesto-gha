@@ -4,6 +4,7 @@ const FORBIDDEN_ERROR = 403;
 const NOT_FOUND_ERROR = 404;
 const CONFLICT_ERROR = 409;
 const REFERENCE_ERROR = 500;
+const RANGE_ERROR = 11000;
 
 module.exports = {
   VALIDATION_ERROR,
@@ -12,4 +13,5 @@ module.exports = {
   NOT_FOUND_ERROR,
   CONFLICT_ERROR,
   REFERENCE_ERROR,
+  RANGE_ERROR,
 };
