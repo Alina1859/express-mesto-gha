@@ -1,12 +1,14 @@
+const mongoose = require('mongoose');
 const Card = require('../models/card');
 const NotFoundError = require('../errors/not-found-err');
 const ForbiddenError = require('../errors/forbidden-err');
+const ValidationError = require('../errors/validation-err');
 
 module.exports.getCards = (req, res, next) => {
   Card.find({})
     .populate('owner')
     .then((cards) => res.send({ data: cards }))
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 module.exports.createCard = (req, res, next) => {
@@ -14,7 +16,13 @@ module.exports.createCard = (req, res, next) => {
 
   Card.create({ name, link, owner: req.user._id })
     .then((card) => res.send({ data: card }))
-    .catch((err) => next(err));
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new ValidationError(err.message));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.deleteCardById = (req, res, next) => {
@@ -34,14 +42,13 @@ module.exports.deleteCardById = (req, res, next) => {
     .then((card) => {
       res.send({ data: card });
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
   { $addToSet: { likes: req.user._id } },
   { new: true },
-  { runValidators: true },
 )
   .then((card) => {
     if (!card) {
@@ -50,7 +57,7 @@ module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
       next(res.send({ data: card }));
     }
   })
-  .catch((err) => next(err));
+  .catch(next);
 
 module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
@@ -64,4 +71,4 @@ module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
       next(res.send({ data: card }));
     }
   })
-  .catch((err) => next(err));
+  .catch(next);

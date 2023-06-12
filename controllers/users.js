@@ -4,12 +4,10 @@ const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const ConflictError = require('../errors/conflict-err');
 
-const { UNAUTHORIZED_ERROR } = require('../errors/errorsCodes');
-
 module.exports.getUsers = (req, res, next) => {
   User.find({})
     .then((users) => res.send(users))
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 module.exports.getCurrentUser = (req, res, next) => {
@@ -21,7 +19,7 @@ module.exports.getCurrentUser = (req, res, next) => {
         next(res.send(user));
       }
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 module.exports.createUser = (req, res, next) => {
@@ -29,23 +27,23 @@ module.exports.createUser = (req, res, next) => {
     name, about, avatar, email, password,
   } = req.body;
 
-  User.findOne({ email })
-    .then((existingUser) => {
-      if (existingUser) {
-        throw new ConflictError('Такой пользователь уже существует');
-      }
-
-      return bcrypt.hash(password, 10)
-        .then((hash) => User.create({
-          name, about, avatar, email, password: hash,
-        }));
-    })
+  bcrypt.hash(password, 10)
+    .then((hash) => User.create({
+      name, about, avatar, email, password: hash,
+    }))
+    // .then((user) => res.status(201).send({ data: user}))
     .then((user) => {
       const { ...userData } = user.toObject();
       delete userData.password;
       res.send({ data: userData });
     })
-    .catch((err) => next(err));
+    .catch((err) => {
+      if (err.code === 11000) {
+        next(new ConflictError('Пользователь с данным email уже существует'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 module.exports.getUserById = (req, res, next) => {
@@ -57,7 +55,7 @@ module.exports.getUserById = (req, res, next) => {
         next(res.send(user));
       }
     })
-    .catch((err) => next(err));
+    .catch(next);
 };
 
 function cachingDecorator(func) {
@@ -78,7 +76,7 @@ function cachingDecorator(func) {
 function updateUserData(req, res, next, args) {
   User.findByIdAndUpdate(req.user._id, args, { new: true, runValidators: true })
     .then((user) => next(res.send({ data: user })))
-    .catch((err) => next(err));
+    .catch(next);
 }
 
 module.exports.updateProfile = (req, res, next) => {
@@ -91,7 +89,7 @@ module.exports.updateAvatar = (req, res, next) => {
   cachingDecorator(updateUserData(req, res, next, { avatar }));
 };
 
-module.exports.login = (req, res) => {
+module.exports.login = (req, res, next) => {
   const { email, password } = req.body;
   return User.findUserByCredentials(email, password)
     .then((user) => {
@@ -109,11 +107,7 @@ module.exports.login = (req, res) => {
         httpOnly: true,
         sameSite: true,
       });
-      res.send(user);
+      res.send(token);
     })
-    .catch((err) => {
-      res
-        .status(UNAUTHORIZED_ERROR)
-        .send({ message: err.message });
-    });
+    .catch(next);
 };
