@@ -18,7 +18,7 @@ module.exports.createCard = (req, res, next) => {
     .then((card) => res.send({ data: card }))
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
-        next(new ValidationError(err.message));
+        next(new ValidationError('Переданы некорректные данные при создании карточки'));
       } else {
         next(err);
       }
@@ -52,12 +52,18 @@ module.exports.likeCard = (req, res, next) => Card.findByIdAndUpdate(
 )
   .then((card) => {
     if (!card) {
-      throw new NotFoundError('Переданы некорректные данные для постановки лайка');
+      throw new NotFoundError('Передан несуществующий _id карточки');
     } else {
       next(res.send({ data: card }));
     }
   })
-  .catch(next);
+  .catch((err) => {
+    if (err instanceof mongoose.Error.CastError) {
+      next(new ValidationError('Переданы некорректные данные для постановки лайка'));
+    } else {
+      next(err);
+    }
+  });
 
 module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
   req.params.cardId,
@@ -71,4 +77,10 @@ module.exports.dislikeCard = (req, res, next) => Card.findByIdAndUpdate(
       next(res.send({ data: card }));
     }
   })
-  .catch(next);
+  .catch((err) => {
+    if (err instanceof mongoose.Error.CastError) {
+      next(new ValidationError('Переданы некорректные данные для снятия лайка'));
+    } else {
+      next(err);
+    }
+  });

@@ -1,6 +1,7 @@
 const router = require('express').Router();
 const cookieParser = require('cookie-parser');
 const { celebrate, Joi } = require('celebrate');
+const { LINK_REGULAR } = require('../consts');
 
 const {
   getUsers,
@@ -32,7 +33,7 @@ router.patch('/me', celebrate({
 router.patch('/me/avatar', celebrate({
   body: Joi.object().keys({
     // eslint-disable-next-line no-useless-escape
-    avatar: Joi.string().regex(/^(http|https):\/\/(?:www\.)?[a-zA-Z0-9-]{2,256}\.[a-zA-Z0-9./?#-]{2,}$/),
+    avatar: Joi.string().regex(LINK_REGULAR),
   }),
 }), updateAvatar);
 

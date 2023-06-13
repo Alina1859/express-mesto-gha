@@ -1,5 +1,6 @@
 const express = require('express');
 const { celebrate, Joi } = require('celebrate');
+const { LINK_REGULAR } = require('../consts');
 
 const router = express.Router();
 
@@ -17,7 +18,7 @@ router.post('/', celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).required(),
     // eslint-disable-next-line no-useless-escape
-    link: Joi.string().regex(/^(http|https):\/\/(?:www\.)?[a-zA-Z0-9-]{2,256}\.[a-zA-Z0-9./?#-]{2,}$/).required(),
+    link: Joi.string().regex(LINK_REGULAR).required(),
   }),
 }), createCard);
 

@@ -1,8 +1,10 @@
+const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/user');
 const NotFoundError = require('../errors/not-found-err');
 const ConflictError = require('../errors/conflict-err');
+const ValidationError = require('../errors/validation-err');
 
 module.exports.getUsers = (req, res, next) => {
   User.find({})
@@ -37,7 +39,9 @@ module.exports.createUser = (req, res, next) => {
       res.send({ data: userData });
     })
     .catch((err) => {
-      if (err.code === 11000) {
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new ValidationError('Переданы некорректные данные при создании пользователя'));
+      } else if (err.code === 11000) {
         next(new ConflictError('Пользователь с данным email уже существует'));
       } else {
         next(err);
@@ -54,7 +58,13 @@ module.exports.getUserById = (req, res, next) => {
         next(res.send(user));
       }
     })
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof mongoose.Error.CastError) {
+        next(new ValidationError('Переданы некорректные данные _id'));
+      } else {
+        next(err);
+      }
+    });
 };
 
 function cachingDecorator(func) {
@@ -75,7 +85,15 @@ function cachingDecorator(func) {
 function updateUserData(req, res, next, args) {
   User.findByIdAndUpdate(req.user._id, args, { new: true, runValidators: true })
     .then((user) => next(res.send({ data: user })))
-    .catch(next);
+    .catch((err) => {
+      if (err instanceof mongoose.Error.ValidationError) {
+        next(new ValidationError('Переданы некорректные данные'));
+      } else if (err instanceof mongoose.Error.DocumentNotFoundError) {
+        next(new NotFoundError('Пользователь с указанным _id не найден'));
+      } else {
+        next(err);
+      }
+    });
 }
 
 module.exports.updateProfile = (req, res, next) => {

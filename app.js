@@ -4,7 +4,7 @@ const cookieParser = require('cookie-parser');
 const { errors } = require('celebrate');
 const rateLimit = require('express-rate-limit');
 const mainRouter = require('./routes');
-const { REFERENCE_ERROR } = require('./errors/errorsCodes');
+const errorsHandler = require('./middlewares/errorsHandler');
 
 const { PORT = 3000 } = process.env;
 
@@ -30,17 +30,7 @@ app.use(limiter);
 app.use(mainRouter);
 
 app.use(errors()); // обработчик ошибок celebrate
-
-app.use((err, req, res, next) => {
-  const statusCode = err.statusCode || REFERENCE_ERROR;
-
-  const message = statusCode === REFERENCE_ERROR
-    ? 'На сервере произошла ошибка'
-    : err.message;
-  res.status(statusCode).send({ message });
-
-  next();
-});
+app.use(errorsHandler);
 
 app.listen(PORT, () => {
   // eslint-disable-next-line no-console

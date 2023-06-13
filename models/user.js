@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const bcrypt = require('bcryptjs');
 const UnauthorizedError = require('../errors/unauthorized-err');
+const { LINK_REGULAR } = require('../consts');
 
 const userSchema = new mongoose.Schema({
   name: {
@@ -20,7 +21,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     // eslint-disable-next-line
-    match: /^(http|https):\/\/[-a-zA-Z0-9._~\-:?#[\]@!$&'()*+,\/;=]{2,256}/gm
+    match: LINK_REGULAR,
   },
   email: {
     type: String,
