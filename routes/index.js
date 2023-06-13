@@ -14,10 +14,10 @@ const auth = require('../middlewares/auth');
 
 router.post('/signup', celebrate({
   body: Joi.object().keys({
-    name: Joi.string().min(2).max(30),
+    name: Joi.string().min(2).max(30).optional(),
     // eslint-disable-next-line no-useless-escape
-    avatar: Joi.string().regex(LINK_REGULAR),
-    about: Joi.string().min(2).max(30),
+    avatar: Joi.string().regex(LINK_REGULAR).optional(),
+    about: Joi.string().min(2).max(30).optional(),
     email: Joi.string().required().email(),
     password: Joi.string().required(),
   }),

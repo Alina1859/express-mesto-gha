@@ -36,7 +36,7 @@ module.exports.createUser = (req, res, next) => {
     .then((user) => {
       const { ...userData } = user.toObject();
       delete userData.password;
-      res.send({ data: userData });
+      res.status(201).send({ data: userData });
     })
     .catch((err) => {
       if (err instanceof mongoose.Error.ValidationError) {
