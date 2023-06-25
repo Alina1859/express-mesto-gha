@@ -1,6 +1,7 @@
 // Массив доменов, с которых разрешены кросс-доменные запросы
 const allowedCors = [
   'https://fronten.domain.nomoreparties.sbs',
+  'https://api.domainname.students.nomoreparties.sbs',
   'localhost:3000',
 ];
 
